@@ -10,6 +10,10 @@
  * implementation (no PHP Intl extension required) based on the well-known
  * algorithm by Roozbeh Pournader and Mohammad Toossi.
  *
+ * Weekday numbering follows the PHP \`w\` convention (0=Sun ... 6=Sat),
+ * so the \`weekend_days\` setting (default "5" = Friday) is consistent
+ * across the settings table, the calendar engine and the admin UI.
+ *
  * @package OnTime
  * @since   0.1.0
  */
@@ -44,32 +48,31 @@ final class OnTime_Calendar_Engine {
 	);
 
 	/**
-	 * Persian weekday names (Saturday=0 ... Friday=6, per engine ordering).
+	 * Persian weekday names indexed by PHP \`w\` (0=Sun ... 6=Sat).
 	 * @since 0.3.0
 	 * @var array
 	 */
 	private $j_weekdays = array(
-		'شنبه',
-		'یک‌شنبه',
-		'دوشنبه',
-		'سه‌شنبه',
-		'چهارشنبه',
-		'پنج‌شنبه',
-		'جمعه',
+		0 => 'یک‌شنبه',
+		1 => 'دوشنبه',
+		2 => 'سه‌شنبه',
+		3 => 'چهارشنبه',
+		4 => 'پنج‌شنبه',
+		5 => 'جمعه',
+		6 => 'شنبه',
 	);
 
 	/**
-	 * Persian official holidays for the current year (Jalali 1404, approximate MVP list).
+	 * Persian official holidays (approximate MVP list for 1404).
 	 * Stored as "month-day" pairs. Extendable via settings in later stages.
 	 * @since 0.3.0
 	 * @var array
 	 */
 	private $j_holidays = array(
-		'1-1',   '1-2',  '1-3',  '1-4',  '1-12', '1-13', // Nowruz
-		'3-14',  // demise of Imam Khomeini
-		'3-15',  // 15 Khordad uprising
-		'11-22', // victory of the revolution
-		'12-29', // nationalization of the oil industry
+		'1-1',  '1-2',  '1-3',  '1-4',  '1-12', '1-13',
+		'3-14', '3-15',
+		'11-22',
+		'12-29',
 	);
 
 	/**
@@ -96,19 +99,14 @@ final class OnTime_Calendar_Engine {
 	/**
 	 * Convert a Gregorian date (Y, m, d) to a Jalali date (Y, m, d).
 	 *
-	 * Pure PHP port of the Pournader-Toossi algorithm. Returns an array with
-	 * integer year, month and day in the Jalali calendar.
+	 * Pure PHP port of the Pournader-Toossi algorithm.
 	 *
 	 * @since 0.3.0
 	 *
 	 * @param int $g_y Gregorian year.
 	 * @param int $g_m Gregorian month.
 	 * @param int $g_d Gregorian day.
-	 * @return array {
-	 *     @type int $year
-	 *     @type int $month
-	 *     @type int $day
-	 * }
+	 * @return array { @type int $year @type int $month @type int $day }
 	 */
 	public function gregorian_to_jalali( $g_y, $g_m, $g_d ) {
 		$g_days = array( 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 );
@@ -119,19 +117,15 @@ final class OnTime_Calendar_Engine {
 		$gd = (int) $g_d - 1;
 
 		$g_day_no = 365 * $gy + (int) ( ( $gy + 3 ) / 4 ) - (int) ( ( $gy + 99 ) / 100 ) + (int) ( ( $gy + 399 ) / 400 );
-
 		for ( $i = 0; $i < $gm; ++ $i ) {
 			$g_day_no += $g_days[ $i ];
 		}
-
 		if ( $gm > 1 && ( ( $g_y % 4 === 0 && $g_y % 100 !== 0 ) || ( $g_y % 400 === 0 ) ) ) {
 			++ $g_day_no;
 		}
-
 		$g_day_no += $gd;
 
 		$j_day_no = $g_day_no - 79;
-
 		$j_np = (int) ( $j_day_no / 12053 );
 		$j_day_no %= 12053;
 
@@ -147,13 +141,10 @@ final class OnTime_Calendar_Engine {
 			$j_day_no -= $j_days[ $i ];
 		}
 
-		$jm = $i + 1;
-		$jd = $j_day_no + 1;
-
 		return array(
 			'year'  => (int) $jy,
-			'month' => (int) $jm,
-			'day'   => (int) $jd,
+			'month' => (int) ( $i + 1 ),
+			'day'   => (int) ( $j_day_no + 1 ),
 		);
 	}
 
@@ -165,11 +156,7 @@ final class OnTime_Calendar_Engine {
 	 * @param int $j_y Jalali year.
 	 * @param int $j_m Jalali month.
 	 * @param int $j_d Jalali day.
-	 * @return array {
-	 *     @type int $year
-	 *     @type int $month
-	 *     @type int $day
-	 * }
+	 * @return array { @type int $year @type int $month @type int $day }
 	 */
 	public function jalali_to_gregorian( $j_y, $j_m, $j_d ) {
 		$j_days = array( 31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29 );
@@ -179,7 +166,7 @@ final class OnTime_Calendar_Engine {
 		$jm = (int) $j_m - 1;
 		$jd = (int) $j_d - 1;
 
-		$j_day_no = 365 * $jy + (int) ( ( $jy / 33 ) ) * 8 + (int) ( ( ( $jy % 33 ) + 3 ) / 4 );
+		$j_day_no = 365 * $jy + (int) ( $jy / 33 ) * 8 + (int) ( ( ( $jy % 33 ) + 3 ) / 4 );
 		for ( $i = 0; $i < $jm; ++ $i ) {
 			$j_day_no += $j_days[ $i ];
 		}
@@ -195,7 +182,6 @@ final class OnTime_Calendar_Engine {
 			-- $g_day_no;
 			$gy += 100 * (int) ( $g_day_no / 36524 );
 			$g_day_no %= 36524;
-
 			if ( $g_day_no >= 365 ) {
 				++ $g_day_no;
 			} else {
@@ -214,25 +200,19 @@ final class OnTime_Calendar_Engine {
 		}
 
 		$sal_a = 0;
-		while ( $g_day_no >= $g_days[ $sal_a ] ) {
-			if ( $sal_a === 1 && $leap ) {
-				if ( $g_day_no >= 29 ) {
-					$g_day_no -= 29;
-				} else {
-					break;
-				}
-			} else {
-				$g_day_no -= $g_days[ $sal_a ];
-			}
+		$g_days_local = $g_days;
+		if ( $leap ) {
+			$g_days_local[1] = 29;
+		}
+		while ( $g_day_no >= $g_days_local[ $sal_a ] ) {
+			$g_day_no -= $g_days_local[ $sal_a ];
 			++ $sal_a;
 		}
-		$gm = $sal_a + 1;
-		$gd = $g_day_no + 1;
 
 		return array(
 			'year'  => (int) $gy,
-			'month' => (int) $gm,
-			'day'   => (int) $gd,
+			'month' => (int) ( $sal_a + 1 ),
+			'day'   => (int) ( $g_day_no + 1 ),
 		);
 	}
 
@@ -240,19 +220,18 @@ final class OnTime_Calendar_Engine {
 	 * Convert a UTC Unix timestamp to a Jalali date array (local-time aware).
 	 *
 	 * The timestamp is converted from UTC to the configured display timezone
-	 * (default Asia/Tehran) before deriving the Jalali date, so that a slot at
-	 * 10:00 Tehran time is presented as 10:00 — not 06:30 UTC.
+	 * (default Asia/Tehran) before deriving the Jalali date.
 	 *
 	 * @since 0.3.0
 	 *
 	 * @param int $timestamp UTC Unix timestamp.
 	 * @return array {
-	 *     @type int    $year
-	 *     @type int    $month
-	 *     @type int    $day
-	 *     @type int    $hour
-	 *     @type int    $minute
-	 *     @type int    $weekday 0 (Sat) .. 6 (Fri) in engine ordering.
+	 *     @type int $year
+	 *     @type int $month
+	 *     @type int $day
+	 *     @type int $hour
+	 *     @type int $minute
+	 *     @type int $weekday PHP \`w\` (0=Sun ... 6=Sat; Friday=5).
 	 * }
 	 */
 	public function to_jalali( $timestamp ) {
@@ -266,21 +245,15 @@ final class OnTime_Calendar_Engine {
 
 		$j = $this->gregorian_to_jalali( $g_y, $g_m, $g_d );
 
-		$j['hour']   = (int) $dt_utc->format( 'G' );
-		$j['minute'] = (int) $dt_utc->format( 'i' );
-
-		// Weekday: PHP w is 0=Sun..6=Sat; reorder to 0=Sat..6=Fri.
-		$php_w       = (int) $dt_utc->format( 'w' );
-		$j['weekday'] = ( $php_w + 1 ) % 7;
+		$j['hour']    = (int) $dt_utc->format( 'G' );
+		$j['minute']  = (int) $dt_utc->format( 'i' );
+		$j['weekday'] = (int) $dt_utc->format( 'w' ); // PHP w: 0=Sun ... 6=Sat, Friday=5.
 
 		return $j;
 	}
 
 	/**
 	 * Convert a Jalali date/time to a UTC Unix timestamp.
-	 *
-	 * The Jalali date is first converted to Gregorian, then interpreted in the
-	 * display timezone and converted back to UTC.
 	 *
 	 * @since 0.3.0
 	 *
@@ -293,11 +266,9 @@ final class OnTime_Calendar_Engine {
 	 */
 	public function jalali_to_timestamp( $j_year, $j_month, $j_day, $hour = 0, $minute = 0 ) {
 		$g = $this->jalali_to_gregorian( $j_year, $j_month, $j_day );
-
-		$tz  = $this->get_display_timezone();
-		$dt  = new DateTime( sprintf( '%04d-%02d-%02d %02d:%02d:00', $g['year'], $g['month'], $g['day'], $hour, $minute ), $tz );
+		$tz = $this->get_display_timezone();
+		$dt = new DateTime( sprintf( '%04d-%02d-%02d %02d:%02d:00', $g['year'], $g['month'], $g['day'], $hour, $minute ), $tz );
 		$dt->setTimezone( new DateTimeZone( 'UTC' ) );
-
 		return (int) $dt->getTimestamp();
 	}
 
@@ -328,12 +299,12 @@ final class OnTime_Calendar_Engine {
 		$min_lead = (int) ( isset( $settings['min_lead_hours'] ) ? $settings['min_lead_hours'] : 2 );
 		$weekend  = isset( $settings['weekend_days'] ) ? explode( ',', $settings['weekend_days'] ) : array( '5' );
 
-		// Build day boundaries (UTC) from the Jalali day in display timezone.
+		// Day boundaries in display timezone.
 		$day_start_ts = $this->jalali_to_timestamp( $j_year, $j_month, $j_day, 0, 0 );
 		$day_j        = $this->to_jalali( $day_start_ts );
 
-		// Weekend check (engine weekday: Friday = 6).
-		if ( in_array( (string) ( $day_j['weekday'] ), $weekend, true ) ) {
+		// Weekend check (PHP w; Friday = 5).
+		if ( in_array( (string) $day_j['weekday'], $weekend, true ) ) {
 			return array();
 		}
 
@@ -356,9 +327,9 @@ final class OnTime_Calendar_Engine {
 		$table_appointments = OnTime_Database::instance()->get_table( 'appointments' );
 		$day_end_ts          = $window_end + DAY_IN_SECONDS;
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$booked = $wpdb->get_results(
 			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				"SELECT start_time, end_time FROM {$table_appointments}
 				WHERE service_id = %d AND status IN ('pending','confirmed')
 				AND start_time >= %s AND start_time < %s",
@@ -383,13 +354,11 @@ final class OnTime_Calendar_Engine {
 		while ( $slot_start + ( $slot_len * MINUTE_IN_SECONDS ) <= $window_end ) {
 			$slot_end = $slot_start + ( $slot_len * MINUTE_IN_SECONDS );
 
-			// Minimum lead time.
 			if ( $slot_start < $min_ts ) {
 				$slot_start += ( $slot_len + $buffer ) * MINUTE_IN_SECONDS;
 				continue;
 			}
 
-			// Overlap check against booked ranges.
 			$overlap = false;
 			foreach ( $booked_ranges as $r ) {
 				if ( $slot_start < $r['end'] && $slot_end > $r['start'] ) {
@@ -425,8 +394,8 @@ final class OnTime_Calendar_Engine {
 	/**
 	 * Format a UTC timestamp as a Jalali date/time string with Persian digits.
 	 *
-	 * Supported format tokens: j (day), n (month number), F (month name),
-	 * Y (year), H (hour 24h), i (minute), w (weekday number 0-6), l (weekday name).
+	 * Supported tokens: j (day), n (month number), F (month name), Y (year),
+	 * H (hour 24h), i (minute), w (weekday number 0-6), l (weekday name).
 	 *
 	 * @since 0.3.0
 	 *
