@@ -1,0 +1,147 @@
+/**
+ * OnTime Settings CSS
+ * 
+ * Styles for settings page
+ * 
+ * @package OnTime
+ */
+
+.ontime-settings-form {
+    max-width: 800px;
+}
+
+.ontime-settings-header {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border-left: 4px solid #2271b1;
+}
+
+.ontime-settings-header p {
+    margin: 0;
+}
+
+.ontime-settings-submit {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+    text-align: right;
+}
+
+/* Form fields */
+.ontime-setting-field {
+    margin: 15px 0;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.ontime-setting-field:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.ontime-setting-field > label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.ontime-setting-field input[type="text"],
+.ontime-setting-field input[type="password"],
+.ontime-setting-field input[type="number"],
+.ontime-setting-field select,
+.ontime-setting-field textarea {
+    width: 100%;
+    max-width: 400px;
+    padding: 8px 12px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.ontime-setting-field input[type="number"],
+.ontime-setting-field select {
+    width: auto;
+    max-width: 200px;
+}
+
+.ontime-setting-field select {
+    cursor: pointer;
+}
+
+.ontime-setting-field textarea {
+    min-height: 80px;
+    max-width: 100%;
+    resize: vertical;
+}
+
+.ontime-field-suffix {
+    margin-right: 8px;
+    color: #8c8f94;
+    font-size: 13px;
+}
+
+/* Conditional fields */
+.ontime-setting-field[data-conditional] {
+    display: none;
+}
+
+.ontime-setting-field[data-conditional].show {
+    display: block;
+}
+
+/* Settings sections */
+.ontime-settings-form h2 {
+    margin: 30px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 18px;
+}
+
+.ontime-settings-form h2:first-child {
+    margin-top: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.ontime-settings-form p {
+    margin: 0 0 15px 0;
+    color: #8c8f94;
+}
+
+/* Settings table */
+.ontime-settings-form table {
+    width: 100%;
+}
+
+.ontime-settings-form table th {
+    width: 250px;
+    vertical-align: top;
+    text-align: right;
+    padding: 10px 15px 10px 0;
+}
+
+.ontime-settings-form table td {
+    vertical-align: middle;
+    padding: 10px 0;
+}
+
+/* Settings description */
+.ontime-settings-form .description {
+    margin: 5px 0 0 0;
+    color: #8c8f94;
+    font-size: 13px;
+}
+
+/* Conditional field toggle */
+.ontime-setting-field input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.ontime-setting-field input[type="checkbox"] + label {
+    display: inline;
+    font-weight: normal;
+    cursor: pointer;
+}

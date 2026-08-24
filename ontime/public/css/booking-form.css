@@ -1,0 +1,1216 @@
+/*
+ * OnTime Multi-Step Booking Form - Modern Mobile-First CSS
+ * 
+ * Features:
+ * - CSS Custom Properties (Variables) for easy customization
+ * - Mobile-first responsive design
+ * - Flexbox and CSS Grid layout
+ * - Modern, app-like styling
+ * - Minimal footprint for PageSpeed optimization
+ * - RTL (Right-to-Left) support for Persian
+ * - Accessibility focused
+ */
+
+/* ========================================================================
+ * CSS CUSTOM PROPERTIES (VARIABLES)
+ * Customize these to match your brand without touching the core CSS
+ * ======================================================================== */
+:root {
+    /* Primary colors */
+    --ontime-primary: #2563eb;
+    --ontime-primary-dark: #1d4ed8;
+    --ontime-primary-light: #dbeafe;
+    --ontime-primary-50: #eff6ff;
+    
+    /* Secondary colors */
+    --ontime-secondary: #7c3aed;
+    --ontime-secondary-dark: #6d28d9;
+    
+    /* Success colors */
+    --ontime-success: #10b981;
+    --ontime-success-light: #d1fae5;
+    
+    /* Warning colors */
+    --ontime-warning: #f59e0b;
+    --ontime-warning-light: #fef3c7;
+    
+    /* Error colors */
+    --ontime-error: #ef4444;
+    --ontime-error-light: #fee2e2;
+    
+    /* Neutral colors */
+    --ontime-gray-50: #f9fafb;
+    --ontime-gray-100: #f3f4f6;
+    --ontime-gray-200: #e5e7eb;
+    --ontime-gray-300: #d1d5db;
+    --ontime-gray-400: #9ca3af;
+    --ontime-gray-500: #6b7280;
+    --ontime-gray-600: #4b5563;
+    --ontime-gray-700: #374151;
+    --ontime-gray-800: #1f2937;
+    --ontime-gray-900: #111827;
+    
+    /* Typography */
+    --ontime-font-family: 'Vazirmatn', 'IranYekan', 'Samim', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --ontime-font-size-base: 16px;
+    --ontime-font-size-sm: 14px;
+    --ontime-font-size-lg: 18px;
+    --ontime-font-size-xl: 20px;
+    --ontime-font-size-2xl: 24px;
+    --ontime-line-height: 1.6;
+    
+    /* Spacing */
+    --ontime-spacing-xs: 0.25rem;
+    --ontime-spacing-sm: 0.5rem;
+    --ontime-spacing-md: 1rem;
+    --ontime-spacing-lg: 1.5rem;
+    --ontime-spacing-xl: 2rem;
+    --ontime-spacing-2xl: 3rem;
+    
+    /* Border radius */
+    --ontime-radius-sm: 0.375rem;
+    --ontime-radius-md: 0.5rem;
+    --ontime-radius-lg: 0.75rem;
+    --ontime-radius-xl: 1rem;
+    --ontime-radius-full: 9999px;
+    
+    /* Shadows */
+    --ontime-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --ontime-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --ontime-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --ontime-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --ontime-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    
+    /* Transitions */
+    --ontime-transition-fast: 150ms ease;
+    --ontime-transition: 200ms ease;
+    --ontime-transition-slow: 300ms ease;
+    
+    /* Border */
+    --ontime-border-width: 1px;
+    --ontime-border-color: var(--ontime-gray-200);
+    
+    /* Focus styles */
+    --ontime-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    --ontime-focus-border: var(--ontime-primary);
+}
+
+/* ========================================================================
+ * BASE STYLES
+ * ======================================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+.ontime-booking-container {
+    font-family: var(--ontime-font-family);
+    direction: rtl;
+    text-align: right;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--ontime-spacing-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ========================================================================
+ * PROGRESS INDICATOR
+ * ======================================================================== */
+
+.ontime-progress {
+    margin-bottom: var(--ontime-spacing-xl);
+}
+
+.ontime-progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--ontime-spacing-md);
+}
+
+.ontime-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+}
+
+.ontime-progress-step .ontime-step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--ontime-radius-full);
+    background: var(--ontime-gray-200);
+    color: var(--ontime-gray-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--ontime-font-size-sm);
+    font-weight: 600;
+    margin-bottom: var(--ontime-spacing-xs);
+    transition: var(--ontime-transition);
+}
+
+.ontime-progress-step.active .ontime-step-number,
+.ontime-progress-step.completed .ontime-step-number {
+    background: var(--ontime-primary);
+    color: white;
+}
+
+.ontime-progress-step.completed .ontime-step-number {
+    background: var(--ontime-success);
+}
+
+.ontime-progress-step .ontime-step-label {
+    font-size: var(--ontime-font-size-xs);
+    color: var(--ontime-gray-500);
+    white-space: nowrap;
+}
+
+.ontime-progress-step.active .ontime-step-label,
+.ontime-progress-step.completed .ontime-step-label {
+    color: var(--ontime-gray-700);
+    font-weight: 500;
+}
+
+.ontime-progress-bar {
+    height: 4px;
+    background: var(--ontime-gray-200);
+    border-radius: var(--ontime-radius-full);
+    overflow: hidden;
+}
+
+.ontime-progress-fill {
+    height: 100%;
+    background: var(--ontime-primary);
+    border-radius: var(--ontime-radius-full);
+    transition: width var(--ontime-transition-slow);
+}
+
+/* Progress connector lines */
+.ontime-progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 32px;
+    right: 32px;
+    height: 2px;
+    background: var(--ontime-gray-200);
+    z-index: 1;
+}
+
+.ontime-progress-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--ontime-gray-200);
+    z-index: 1;
+}
+
+/* ========================================================================
+ * FORM HEADER
+ * ======================================================================== */
+
+.ontime-form-header {
+    margin-bottom: var(--ontime-spacing-xl);
+}
+
+.ontime-form-title {
+    font-size: var(--ontime-font-size-2xl);
+    font-weight: 700;
+    color: var(--ontime-gray-900);
+    margin: 0 0 var(--ontime-spacing-sm) 0;
+}
+
+.ontime-form-subtitle {
+    font-size: var(--ontime-font-size-sm);
+    color: var(--ontime-gray-500);
+    margin: 0;
+}
+
+/* ========================================================================
+ * FORM STEPS
+ * ======================================================================== */
+
+.ontime-booking-form {
+    width: 100%;
+}
+
+.ontime-form-step {
+    display: none;
+    animation: fadeIn var(--ontime-transition-slow) ease-out;
+}
+
+.ontime-form-step.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ontime-step-content {
+    background: white;
+    border-radius: var(--ontime-radius-lg);
+    padding: var(--ontime-spacing-lg);
+    box-shadow: var(--ontime-shadow);
+    margin-bottom: var(--ontime-spacing-lg);
+}
+
+.ontime-step-title {
+    font-size: var(--ontime-font-size-xl);
+    font-weight: 600;
+    color: var(--ontime-gray-800);
+    margin: 0 0 var(--ontime-spacing-lg) 0;
+}
+
+.ontime-step-footer {
+    display: flex;
+    gap: var(--ontime-spacing-md);
+    justify-content: flex-end;
+}
+
+/* ========================================================================
+ * BUTTONS
+ * ======================================================================== */
+
+.ontime-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ontime-spacing-sm);
+    padding: var(--ontime-spacing-sm) var(--ontime-spacing-xl);
+    font-size: var(--ontime-font-size-base);
+    font-weight: 500;
+    line-height: 1.5;
+    border: none;
+    border-radius: var(--ontime-radius-md);
+    cursor: pointer;
+    transition: all var(--ontime-transition);
+    text-decoration: none;
+}
+
+.ontime-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--ontime-focus-ring);
+}
+
+.ontime-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ontime-btn-primary {
+    background: var(--ontime-primary);
+    color: white;
+}
+
+.ontime-btn-primary:hover:not(:disabled) {
+    background: var(--ontime-primary-dark);
+    transform: translateY(-1px);
+}
+
+.ontime-btn-primary:active:not(:disabled) {
+    background: var(--ontime-primary-dark);
+    transform: translateY(0);
+}
+
+.ontime-btn-secondary {
+    background: var(--ontime-gray-100);
+    color: var(--ontime-gray-700);
+    border: 1px solid var(--ontime-gray-200);
+}
+
+.ontime-btn-secondary:hover:not(:disabled) {
+    background: var(--ontime-gray-200);
+    border-color: var(--ontime-gray-300);
+}
+
+.ontime-btn-secondary:active:not(:disabled) {
+    background: var(--ontime-gray-300);
+}
+
+.ontime-btn-full {
+    width: 100%;
+}
+
+.ontime-btn svg {
+    pointer-events: none;
+}
+
+/* Loading state for buttons */
+.ontime-btn-loading .ontime-btn-text {
+    display: none;
+}
+
+.ontime-btn-loading .ontime-btn-loading {
+    display: inline-flex;
+}
+
+/* ========================================================================
+ * SERVICES GRID
+ * ======================================================================== */
+
+.ontime-services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--ontime-spacing-md);
+}
+
+.ontime-service-card {
+    display: flex;
+    align-items: center;
+    gap: var(--ontime-spacing-md);
+    padding: var(--ontime-spacing-md);
+    border: 2px solid var(--ontime-gray-200);
+    border-radius: var(--ontime-radius-lg);
+    background: white;
+    cursor: pointer;
+    transition: all var(--ontime-transition);
+    text-align: right;
+    position: relative;
+}
+
+.ontime-service-card:hover {
+    border-color: var(--ontime-primary-light);
+    box-shadow: var(--ontime-shadow-md);
+}
+
+.ontime-service-card.selected {
+    border-color: var(--ontime-primary);
+    background: var(--ontime-primary-50);
+}
+
+.ontime-service-card:focus-visible {
+    outline: none;
+    box-shadow: var(--ontime-focus-ring);
+}
+
+.ontime-service-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--ontime-primary-light);
+    border-radius: var(--ontime-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ontime-service-card.selected .ontime-service-icon {
+    background: var(--ontime-primary);
+}
+
+.ontime-service-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--ontime-primary);
+}
+
+.ontime-service-card.selected .ontime-service-icon svg {
+    stroke: white;
+}
+
+.ontime-service-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ontime-service-name {
+    font-size: var(--ontime-font-size-base);
+    font-weight: 600;
+    color: var(--ontime-gray-800);
+    margin: 0 0 var(--ontime-spacing-xs) 0;
+}
+
+.ontime-service-card.selected .ontime-service-name {
+    color: var(--ontime-primary);
+}
+
+.ontime-service-meta {
+    display: flex;
+    gap: var(--ontime-spacing-md);
+    font-size: var(--ontime-font-size-sm);
+    color: var(--ontime-gray-500);
+}
+
+.ontime-service-price {
+    font-weight: 600;
+    color: var(--ontime-primary);
+}
+
+.ontime-service-check {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--ontime-gray-300);
+    border-radius: var(--ontime-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: var(--ontime-transition);
+}
+
+.ontime-service-check svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--ontime-gray-400);
+    opacity: 0;
+    transition: var(--ontime-transition);
+}
+
+.ontime-service-card.selected .ontime-service-check {
+    border-color: var(--ontime-primary);
+}
+
+.ontime-service-card.selected .ontime-service-check svg {
+    stroke: var(--ontime-primary);
+    opacity: 1;
+}
+
+/* ========================================================================
+ * STAFF GRID
+ * ======================================================================== */
+
+.ontime-staff-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--ontime-spacing-md);
+}
+
+.ontime-staff-card {
+    display: flex;
+    align-items: center;
+    gap: var(--ontime-spacing-md);
+    padding: var(--ontime-spacing-md);
+    border: 2px solid var(--ontime-gray-200);
+    border-radius: var(--ontime-radius-lg);
+    background: white;
+    cursor: pointer;
+    transition: all var(--ontime-transition);
+    text-align: right;
+    position: relative;
+}
+
+.ontime-staff-card:hover {
+    border-color: var(--ontime-primary-light);
+    box-shadow: var(--ontime-shadow-md);
+}
+
+.ontime-staff-card.selected {
+    border-color: var(--ontime-primary);
+    background: var(--ontime-primary-50);
+}
+
+.ontime-staff-card:focus-visible {
+    outline: none;
+    box-shadow: var(--ontime-focus-ring);
+}
+
+.ontime-staff-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--ontime-radius-full);
+    background: var(--ontime-gray-200);
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.ontime-staff-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ontime-primary-light) !important;
+}
+
+.ontime-staff-avatar-placeholder svg {
+    width: 32px;
+    height: 32px;
+    stroke: var(--ontime-primary);
+}
+
+.ontime-staff-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ontime-staff-name {
+    font-size: var(--ontime-font-size-base);
+    font-weight: 600;
+    color: var(--ontime-gray-800);
+    margin: 0 0 var(--ontime-spacing-xs) 0;
+}
+
+.ontime-staff-card.selected .ontime-staff-name {
+    color: var(--ontime-primary);
+}
+
+.ontime-staff-bio {
+    font-size: var(--ontime-font-size-sm);
+    color: var(--ontime-gray-500);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ontime-staff-check {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--ontime-gray-300);
+    border-radius: var(--ontime-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: var(--ontime-transition);
+}
+
+.ontime-staff-check svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--ontime-gray-400);
+    opacity: 0;
+    transition: var(--ontime-transition);
+}
+
+.ontime-staff-card.selected .ontime-staff-check {
+    border-color: var(--ontime-primary);
+}
+
+.ontime-staff-card.selected .ontime-staff-check svg {
+    stroke: var(--ontime-primary);
+    opacity: 1;
+}
+
+/* ========================================================================
+ * DATEPICKER
+ * ======================================================================== */
+
+.ontime-datepicker-container {
+    margin-bottom: var(--ontime-spacing-lg);
+}
+
+.ontime-field-label {
+    display: block;
+    font-size: var(--ontime-font-size-sm);
+    font-weight: 500;
+    color: var(--ontime-gray-700);
+    margin-bottom: var(--ontime-spacing-sm);
+}
+
+.required {
+    color: var(--ontime-error);
+    margin-right: var(--ontime-spacing-xs);
+}
+
+.ontime-input {
+    width: 100%;
+    padding: var(--ontime-spacing-sm) var(--ontime-spacing-md);
+    font-size: var(--ontime-font-size-base);
+    border: 1px solid var(--ontime-gray-300);
+    border-radius: var(--ontime-radius-md);
+    background: white;
+    transition: var(--ontime-transition);
+    direction: ltr;
+    text-align: right;
+}
+
+.ontime-input:focus {
+    outline: none;
+    border-color: var(--ontime-primary);
+    box-shadow: 0 0 0 3px var(--ontime-primary-light);
+}
+
+.ontime-input::placeholder {
+    color: var(--ontime-gray-400);
+}
+
+.ontime-datepicker {
+    cursor: pointer;
+}
+
+.ontime-datepicker-calendar {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    background: white;
+    border-radius: var(--ontime-radius-lg);
+    box-shadow: var(--ontime-shadow-xl);
+    padding: var(--ontime-spacing-md);
+    margin-top: var(--ontime-spacing-sm);
+}
+
+.ontime-datepicker-calendar.active {
+    display: block;
+}
+
+/* ========================================================================
+ * TIME SLOTS
+ * ======================================================================== */
+
+.ontime-time-slots-container {
+    margin-bottom: var(--ontime-spacing-lg);
+}
+
+.ontime-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--ontime-spacing-sm);
+    min-height: 100px;
+}
+
+.ontime-slot-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ontime-spacing-sm) var(--ontime-spacing-md);
+    font-size: var(--ontime-font-size-sm);
+    border: 1px solid var(--ontime-gray-300);
+    border-radius: var(--ontime-radius-md);
+    background: white;
+    cursor: pointer;
+    transition: var(--ontime-transition);
+    white-space: nowrap;
+}
+
+.ontime-slot-btn:hover:not(:disabled) {
+    border-color: var(--ontime-primary);
+    color: var(--ontime-primary);
+}
+
+.ontime-slot-btn.selected {
+    border-color: var(--ontime-primary);
+    background: var(--ontime-primary);
+    color: white;
+}
+
+.ontime-slot-btn:disabled {
+    background: var(--ontime-gray-100);
+    color: var(--ontime-gray-400);
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+.ontime-slot-btn.holiday {
+    background: var(--ontime-error-light);
+    border-color: var(--ontime-error-light);
+    color: var(--ontime-error);
+    cursor: not-allowed;
+}
+
+.ontime-slots-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ontime-spacing-xl);
+    color: var(--ontime-gray-500);
+}
+
+/* ========================================================================
+ * SPINNER
+ * ======================================================================== */
+
+.ontime-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--ontime-gray-200);
+    border-top-color: var(--ontime-primary);
+    border-radius: var(--ontime-radius-full);
+    animation: spin 0.8s linear infinite;
+    margin-bottom: var(--ontime-spacing-sm);
+}
+
+.ontime-spinner-small {
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: var(--ontime-radius-full);
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================================================
+ * FORM FIELDS
+ * ======================================================================== */
+
+.ontime-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--ontime-spacing-md);
+}
+
+.ontime-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.ontime-form-group.ontime-full-width {
+    grid-column: 1 / -1;
+}
+
+.ontime-form-group label {
+    margin-bottom: var(--ontime-spacing-sm);
+}
+
+.ontime-input {
+    width: 100%;
+    padding: var(--ontime-spacing-sm) var(--ontime-spacing-md);
+    font-size: var(--ontime-font-size-base);
+    border: 1px solid var(--ontime-gray-300);
+    border-radius: var(--ontime-radius-md);
+    background: white;
+    transition: var(--ontime-transition);
+}
+
+.ontime-input:focus {
+    outline: none;
+    border-color: var(--ontime-primary);
+    box-shadow: 0 0 0 3px var(--ontime-primary-light);
+}
+
+.ontime-input::placeholder {
+    color: var(--ontime-gray-400);
+}
+
+.ontime-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.ontime-field-error {
+    font-size: var(--ontime-font-size-xs);
+    color: var(--ontime-error);
+    margin-top: var(--ontime-spacing-xs);
+    min-height: 18px;
+}
+
+/* ========================================================================
+ * CONFIRMATION CARD
+ * ======================================================================== */
+
+.ontime-confirmation-card {
+    background: var(--ontime-gray-50);
+    border-radius: var(--ontime-radius-lg);
+    padding: var(--ontime-spacing-lg);
+    margin-bottom: var(--ontime-spacing-lg);
+}
+
+.ontime-confirmation-section {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--ontime-spacing-md) 0;
+    border-bottom: 1px solid var(--ontime-gray-200);
+}
+
+.ontime-confirmation-section:last-child {
+    border-bottom: none;
+}
+
+.ontime-confirmation-section.ontime-confirmation-customer {
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.ontime-confirmation-section-title {
+    font-size: var(--ontime-font-size-sm);
+    color: var(--ontime-gray-500);
+    font-weight: 500;
+}
+
+.ontime-confirmation-value {
+    font-size: var(--ontime-font-size-base);
+    font-weight: 600;
+    color: var(--ontime-gray-800);
+    margin: 0;
+}
+
+.ontime-confirmation-price {
+    color: var(--ontime-primary);
+    font-size: var(--ontime-font-size-lg);
+}
+
+.ontime-customer-info {
+    text-align: right;
+    width: 100%;
+}
+
+.ontime-customer-info p {
+    margin: var(--ontime-spacing-xs) 0;
+    font-size: var(--ontime-font-size-sm);
+    color: var(--ontime-gray-700);
+}
+
+.ontime-customer-info strong {
+    color: var(--ontime-gray-800);
+}
+
+.ontime-customer-info span:empty::before {
+    content: '—';
+    color: var(--ontime-gray-400);
+}
+
+/* ========================================================================
+ * TERMS CHECKBOX
+ * ======================================================================== */
+
+.ontime-terms-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ontime-spacing-sm);
+    margin: var(--ontime-spacing-lg) 0;
+}
+
+.ontime-terms-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--ontime-primary);
+    cursor: pointer;
+}
+
+.ontime-terms-checkbox label {
+    font-size: var(--ontime-font-size-sm);
+    color: var(--ontime-gray-600);
+    line-height: 1.6;
+    cursor: pointer;
+}
+
+.ontime-terms-link {
+    color: var(--ontime-primary);
+    text-decoration: none;
+}
+
+.ontime-terms-link:hover {
+    text-decoration: underline;
+}
+
+/* ========================================================================
+ * ERROR MESSAGES
+ * ======================================================================== */
+
+.ontime-error-message {
+    color: var(--ontime-error);
+    font-size: var(--ontime-font-size-sm);
+    margin: var(--ontime-spacing-md) 0 0 0;
+    min-height: 20px;
+}
+
+.ontime-error {
+    color: var(--ontime-error);
+    background: var(--ontime-error-light);
+    padding: var(--ontime-spacing-md);
+    border-radius: var(--ontime-radius-md);
+    text-align: center;
+}
+
+/* ========================================================================
+ * SUCCESS MODAL
+ * ======================================================================== */
+
+.ontime-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ontime-spacing-lg);
+    pointer-events: none;
+}
+
+.ontime-modal.active {
+    display: flex;
+    pointer-events: auto;
+}
+
+.ontime-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    animation: fadeIn var(--ontime-transition) ease-out;
+}
+
+.ontime-modal-content {
+    position: relative;
+    background: white;
+    border-radius: var(--ontime-radius-xl);
+    box-shadow: var(--ontime-shadow-xl);
+    padding: var(--ontime-spacing-2xl);
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    animation: slideUp var(--ontime-transition-slow) ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ontime-modal-header {
+    margin-bottom: var(--ontime-spacing-lg);
+}
+
+.ontime-success-icon {
+    color: var(--ontime-success);
+    animation: checkmarkPop 0.5s ease-out;
+}
+
+@keyframes checkmarkPop {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.ontime-modal-title {
+    font-size: var(--ontime-font-size-2xl);
+    font-weight: 700;
+    color: var(--ontime-gray-900);
+    margin: 0 0 var(--ontime-spacing-md) 0;
+}
+
+.ontime-modal-body {
+    margin-bottom: var(--ontime-spacing-xl);
+}
+
+.ontime-success-message {
+    font-size: var(--ontime-font-size-lg);
+    color: var(--ontime-gray-600);
+    margin: 0 0 var(--ontime-spacing-lg) 0;
+}
+
+.ontime-appointment-summary {
+    background: var(--ontime-gray-50);
+    border-radius: var(--ontime-radius-lg);
+    padding: var(--ontime-spacing-lg);
+    text-align: right;
+}
+
+.ontime-appointment-summary p {
+    margin: var(--ontime-spacing-xs) 0;
+    font-size: var(--ontime-font-size-sm);
+    color: var(--ontime-gray-700);
+}
+
+.ontime-modal-footer {
+    display: flex;
+    justify-content: center;
+}
+
+.ontime-modal-close {
+    min-width: 140px;
+}
+
+/* ========================================================================
+ * RESPONSIVE DESIGN
+ * ======================================================================== */
+
+@media (min-width: 640px) {
+    .ontime-services-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .ontime-staff-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .ontime-form-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 768px) {
+    .ontime-booking-container {
+        padding: var(--ontime-spacing-xl);
+    }
+    
+    .ontime-step-content {
+        padding: var(--ontime-spacing-xl);
+    }
+    
+    .ontime-modal-content {
+        padding: var(--ontime-spacing-2xl) var(--ontime-spacing-xl);
+    }
+}
+
+@media (min-width: 1024px) {
+    .ontime-services-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .ontime-staff-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .ontime-progress-steps {
+        gap: var(--ontime-spacing-sm);
+    }
+    
+    .ontime-step-label {
+        display: block;
+    }
+}
+
+@media (max-width: 639px) {
+    .ontime-booking-container {
+        padding: var(--ontime-spacing-md);
+    }
+    
+    .ontime-step-content {
+        padding: var(--ontime-spacing-md);
+    }
+    
+    .ontime-progress-steps {
+        justify-content: space-between;
+    }
+    
+    .ontime-progress-step .ontime-step-label {
+        display: none;
+    }
+    
+    .ontime-step-footer {
+        flex-direction: column-reverse;
+        gap: var(--ontime-spacing-sm);
+    }
+    
+    .ontime-btn {
+        width: 100%;
+    }
+    
+    .ontime-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ontime-confirmation-section {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: var(--ontime-spacing-xs);
+    }
+    
+    .ontime-confirmation-section.ontime-confirmation-customer {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+    
+    .ontime-services-grid,
+    .ontime-staff-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ontime-slots-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ========================================================================
+ * RTL OVERRIDES
+ * ======================================================================== */
+
+[dir="ltr"] .ontime-booking-container,
+.ontime-ltr .ontime-booking-container {
+    direction: ltr;
+    text-align: left;
+}
+
+[dir="ltr"] .ontime-service-info,
+.ontime-ltr .ontime-service-info,
+[dir="ltr"] .ontime-staff-info,
+.ontime-ltr .ontime-staff-info {
+    text-align: left;
+}
+
+[dir="ltr"] .ontime-step-label,
+.ontime-ltr .ontime-step-label,
+[dir="ltr"] .ontime-progress-step .ontime-step-label,
+.ontime-ltr .ontime-progress-step .ontime-step-label {
+    text-align: center;
+}
+
+/* ========================================================================
+ * PRINT STYLES
+ * ======================================================================== */
+
+@media print {
+    .ontime-booking-container {
+        max-width: none;
+        padding: 0;
+    }
+    
+    .ontime-form-step:not(.active) {
+        display: none !important;
+    }
+    
+    .ontime-confirmation-card {
+        page-break-inside: avoid;
+    }
+}
+
+/* ========================================================================
+ * ACCESSIBILITY
+ * ======================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+:focus-visible {
+    outline: 2px solid var(--ontime-primary);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .ontime-btn-primary {
+        border: 2px solid var(--ontime-gray-900);
+    }
+    
+    .ontime-service-card,
+    .ontime-staff-card {
+        border-width: 2px;
+    }
+}
