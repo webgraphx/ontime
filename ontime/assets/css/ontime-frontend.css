@@ -1,15 +1,201 @@
 /**
- * OnTime — Frontend styles (Stage 4).
+ * OnTime — Frontend booking form styles (Stage 4).
+ * Mobile-first, RTL, no framework, CSS variables for theming.
  */
 
 :root {
 	--ontime-primary: #2563eb;
+	--ontime-primary-hover: #1d4ed8;
 	--ontime-bg: #ffffff;
+	--ontime-surface: #f8fafc;
+	--ontime-border: #e2e8f0;
 	--ontime-text: #1e293b;
+	--ontime-muted: #64748b;
+	--ontime-success: #16a34a;
+	--ontime-error: #dc2626;
 	--ontime-radius: 8px;
+	--ontime-gap: 12px;
 }
 
 .ontime-widget {
 	direction: rtl;
 	font-family: inherit;
+	color: var(--ontime-text);
+	background: var(--ontime-bg);
+	border: 1px solid var(--ontime-border);
+	border-radius: var(--ontime-radius);
+	padding: 16px;
+	max-width: 480px;
+	margin: 0 auto;
+	box-sizing: border-box;
+}
+
+.ontime-widget * { box-sizing: border-box; }
+
+.ontime-theme-dark {
+	--ontime-bg: #0f172a;
+	--ontime-surface: #1e293b;
+	--ontime-border: #334155;
+	--ontime-text: #f1f5f9;
+	--ontime-muted: #94a3b8;
+}
+
+.ontime-step-title {
+	font-size: 16px;
+	font-weight: 600;
+	margin: 0 0 var(--ontime-gap);
+}
+
+.ontime-hidden { display: none !important; }
+
+/* Service cards */
+.ontime-service-card {
+	border: 1px solid var(--ontime-border);
+	border-radius: var(--ontime-radius);
+	padding: 12px;
+	margin-bottom: 8px;
+	cursor: pointer;
+	background: var(--ontime-surface);
+	transition: border-color .15s;
+}
+.ontime-service-card:hover { border-color: var(--ontime-primary); }
+.ontime-service-card.selected {
+	border-color: var(--ontime-primary);
+	background: color-mix(in srgb, var(--ontime-primary) 8%, var(--ontime-surface));
+}
+.ontime-service-card .ontime-svc-name { font-weight: 600; }
+.ontime-service-card .ontime-svc-meta { font-size: 12px; color: var(--ontime-muted); margin-top: 4px; }
+
+/* Calendar */
+.ontime-cal-nav {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8px;
+	font-weight: 600;
+}
+.ontime-cal-nav button {
+	background: var(--ontime-surface);
+	border: 1px solid var(--ontime-border);
+	border-radius: 6px;
+	padding: 4px 10px;
+	cursor: pointer;
+	color: var(--ontime-text);
+}
+.ontime-cal-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 4px;
+	text-align: center;
+}
+.ontime-cal-cell {
+	aspect-ratio: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 13px;
+	background: var(--ontime-surface);
+	border: 1px solid transparent;
+}
+.ontime-cal-cell:hover { border-color: var(--ontime-primary); }
+.ontime-cal-cell.empty { visibility: hidden; cursor: default; }
+.ontime-cal-cell.disabled { color: var(--ontime-muted); opacity: .4; cursor: not-allowed; }
+.ontime-cal-cell.selected { background: var(--ontime-primary); color: #fff; }
+
+/* Slots */
+.ontime-slots { display: flex; flex-wrap: wrap; gap: 8px; }
+.ontime-slot {
+	padding: 8px 14px;
+	border: 1px solid var(--ontime-border);
+	border-radius: var(--ontime-radius);
+	background: var(--ontime-surface);
+	cursor: pointer;
+	font-size: 14px;
+}
+.ontime-slot:hover { border-color: var(--ontime-primary); }
+.ontime-slot.selected { background: var(--ontime-primary); color: #fff; border-color: var(--ontime-primary); }
+
+/* Form */
+.ontime-form { display: grid; gap: 10px; }
+.ontime-field { display: grid; gap: 4px; font-size: 13px; }
+.ontime-field input, .ontime-field textarea {
+	padding: 8px 10px;
+	border: 1px solid var(--ontime-border);
+	border-radius: 6px;
+	font: inherit;
+	background: var(--ontime-bg);
+	color: var(--ontime-text);
+}
+.ontime-field input:focus, .ontime-field textarea:focus {
+	outline: none;
+	border-color: var(--ontime-primary);
+}
+
+/* Summary */
+.ontime-summary {
+	background: var(--ontime-surface);
+	border-radius: var(--ontime-radius);
+	padding: 12px;
+	margin-bottom: 10px;
+	font-size: 14px;
+	line-height: 1.8;
+}
+.ontime-result { font-size: 14px; min-height: 20px; }
+.ontime-result.ontime-ok { color: var(--ontime-success); font-weight: 600; }
+.ontime-result.ontime-err { color: var(--ontime-error); }
+
+/* Navigation */
+.ontime-nav {
+	display: flex;
+	justify-content: space-between;
+	margin-top: var(--ontime-gap);
+}
+.ontime-btn {
+	padding: 10px 20px;
+	border: none;
+	border-radius: var(--ontime-radius);
+	cursor: pointer;
+	font: inherit;
+	font-weight: 600;
+}
+.ontime-btn-next { background: var(--ontime-primary); color: #fff; }
+.ontime-btn-next:hover { background: var(--ontime-primary-hover); }
+.ontime-btn-prev { background: var(--ontime-surface); color: var(--ontime-text); border: 1px solid var(--ontime-border); }
+.ontime-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Progress */
+.ontime-progress {
+	height: 4px;
+	background: var(--ontime-border);
+	border-radius: 2px;
+	margin-top: 12px;
+	overflow: hidden;
+}
+.ontime-progress-bar {
+	height: 100%;
+	background: var(--ontime-primary);
+	width: 20%;
+	transition: width .25s;
+}
+
+/* Spinner */
+.ontime-loading::after {
+	content: "";
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border: 2px solid var(--ontime-border);
+	border-top-color: var(--ontime-primary);
+	border-radius: 50%;
+	animation: ontime-spin .6s linear infinite;
+	vertical-align: middle;
+	margin-inline-start: 6px;
+}
+@keyframes ontime-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 520px) {
+	.ontime-widget { padding: 12px; border: none; max-width: 100%; }
+	.ontime-cal-cell { font-size: 12px; }
 }
