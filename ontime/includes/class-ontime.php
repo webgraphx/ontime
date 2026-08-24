@@ -52,10 +52,32 @@ final class OnTime {
 		}
 		if ( is_admin() && class_exists( 'OnTime_Admin_Settings' ) ) {
 			$this->settings = OnTime_Admin_Settings::instance();
+			// Process appointments list-table actions (row + bulk) early on admin screens.
+			add_action( 'admin_init', array( $this, 'process_admin_actions' ) );
 		}
 		if ( class_exists( 'OnTime_Frontend_Booking_Form' ) ) {
 			$this->frontend = OnTime_Frontend_Booking_Form::instance();
 		}
+	}
+
+	/**
+	 * Delegate list-table action processing to the List Table class when on an OnTime admin page.
+	 *
+	 * @since 0.4.0
+	 * @return void
+	 */
+	public function process_admin_actions() {
+		if ( ! is_admin() || ! class_exists( 'OnTime_Admin_List_Table' ) ) {
+			return;
+		}
+		// Only act on the appointments page with an action present.
+		$page   = isset( $_GET['page'] ) ? sanitize_key( $_GET['page'] ) : '';
+		$action = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+		if ( 'ontime' !== $page || '' === $action || '-1' === $action ) {
+			return;
+		}
+		$table = new OnTime_Admin_List_Table();
+		$table->process_actions();
 	}
 
 	public function activate() {
