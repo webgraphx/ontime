@@ -1,0 +1,15 @@
+/**
+ * OnTime — Frontend styles (Stage 4).
+ */
+
+:root {
+	--ontime-primary: #2563eb;
+	--ontime-bg: #ffffff;
+	--ontime-text: #1e293b;
+	--ontime-radius: 8px;
+}
+
+.ontime-widget {
+	direction: rtl;
+	font-family: inherit;
+}

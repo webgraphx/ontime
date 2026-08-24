@@ -1,73 +1,53 @@
 <?php
 /**
- * Plugin Name:       OnTime - سیستم رزرو نوبت آنلاین
- * Plugin URI:        https://ontime.ir
- * Description:       سیستم حرفه‌ای رزرو و مدیریت نوبت آنلاین با پشتیبانی کامل از تقویم جلالی و درگاه‌های پرداخت ایرانی
- * Version:           1.0.0
+ * Plugin Name:       OnTime
+ * Plugin URI:        https://ontime.example.com
+ * Description:        سیستم نوبت‌دهی و رزرو آنلاین سبک‌وزن و امن با پشتیبانی کامل از تقویم جلالی، مناسب بازار ایرانی (ژاکت و راستچین).
+ * Version:           0.2.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
- * Author:            Team OnTime
- * Author URI:        https://ontime.ir
- * License:           GPL v2 or later
+ * Author:            Erfan Mirzaii
+ * Author URI:        https://erfanmirzaii.example.com
+ * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       ontime
  * Domain Path:       /languages
+ *
+ * @package OnTime
  */
 
-// Exit if accessed directly
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-// Define plugin constants
-if (!defined('ONTIME_VERSION')) {
-    define('ONTIME_VERSION', '1.0.0');
+define( 'ONTIME_VERSION', '0.2.0' );
+define( 'ONTIME_PATH', plugin_dir_path( __FILE__ ) );
+define( 'ONTIME_URL', plugin_dir_url( __FILE__ ) );
+define( 'ONTIME_BASENAME', plugin_basename( __FILE__ ) );
+
+function ontime_autoload( $class_name ) {
+	if ( 0 !== strpos( $class_name, 'OnTime_' ) ) {
+		return;
+	}
+	$relative = substr( $class_name, strlen( 'OnTime_' ) );
+	$parts    = explode( '_', $relative );
+	$class    = array_pop( $parts );
+	$sub_dir  = ! empty( $parts ) ? strtolower( implode( '/', $parts ) ) . '/' : '';
+	$slug     = strtolower( preg_replace( '/([a-z0-9])([A-Z])/', '$1-$2', $class ) );
+	$slug     = strtolower( str_replace( '_', '-', $slug ) );
+	$file     = ONTIME_PATH . 'includes/' . $sub_dir . 'class-' . $slug . '.php';
+	if ( file_exists( $file ) ) {
+		require_once $file;
+	}
+}
+spl_autoload_register( 'ontime_autoload' );
+
+function ontime() {
+	return OnTime::instance();
 }
 
-if (!defined('ONTIME_PLUGIN_FILE')) {
-    define('ONTIME_PLUGIN_FILE', __FILE__);
+function ontime_load_textdomain() {
+	load_plugin_textdomain( 'ontime', false, dirname( ONTIME_BASENAME ) . '/languages' );
 }
-
-if (!defined('ONTIME_PLUGIN_DIR')) {
-    define('ONTIME_PLUGIN_DIR', plugin_dir_path(__FILE__));
-}
-
-if (!defined('ONTIME_PLUGIN_URL')) {
-    define('ONTIME_PLUGIN_URL', plugin_dir_url(__FILE__));
-}
-
-if (!defined('ONTIME_PLUGIN_BASENAME')) {
-    define('ONTIME_PLUGIN_BASENAME', plugin_basename(__FILE__));
-}
-
-// Composer autoloader check
-$autoloader_path = ONTIME_PLUGIN_DIR . 'vendor/autoload.php';
-if (file_exists($autoloader_path)) {
-    require_once $autoloader_path;
-} else {
-    // Fallback to custom PSR-4 autoloader
-    require_once ONTIME_PLUGIN_DIR . 'includes/class-ontime-autoloader.php';
-    new OnTime\Autoloader();
-}
-
-// Initialize the plugin
-add_action('plugins_loaded', function() {
-    OnTime\Core\Plugin::get_instance();
-});
-
-// Activation and deactivation hooks
-register_activation_hook(ONTIME_PLUGIN_FILE, function() {
-    OnTime\Database\Database::get_instance()->create_tables();
-});
-
-register_deactivation_hook(ONTIME_PLUGIN_FILE, function() {
-    // Cleanup tasks if needed
-    do_action('ontime_deactivate');
-});
-
-// Uninstall hook
-register_uninstall_hook(ONTIME_PLUGIN_FILE, function() {
-    if (defined('ONTIME_COMPLETE_UNINSTALL') && ONTIME_COMPLETE_UNINSTALL) {
-        OnTime\Database\Database::get_instance()->drop_tables();
-    }
-});
+add_action( 'init', 'ontime_load_textdomain' );
+add_action( 'plugins_loaded', 'ontime' );
