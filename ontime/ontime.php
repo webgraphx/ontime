@@ -3,7 +3,7 @@
  * Plugin Name:       OnTime
  * Plugin URI:        https://ontime.example.com
  * Description:        سیستم نوبت‌دهی و رزرو آنلاین سبک‌وزن و امن با پشتیبانی کامل از تقویم جلالی، مناسب بازار ایرانی (ژاکت و راستچین).
- * Version:           0.2.0
+ * Version:           0.3.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Erfan Mirzaii
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ONTIME_VERSION', '0.2.0' );
+define( 'ONTIME_VERSION', '0.3.0' );
 define( 'ONTIME_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ONTIME_URL', plugin_dir_url( __FILE__ ) );
 define( 'ONTIME_BASENAME', plugin_basename( __FILE__ ) );

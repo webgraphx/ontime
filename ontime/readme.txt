@@ -4,7 +4,7 @@ Tags: booking, appointment, reservation, jalali, persian, نوبت, رزرو
 Requires at least: 5.8
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,10 +43,16 @@ OnTime یک افزونه وردپرسی سبک‌وزن و امن برای مد�
 
 == Changelog ==
 
+= 0.3.0 =
+* پیاده‌سازی موتور تقویم جلالی (OnTime_Calendar_Engine) با تبدیل UTC↔جلالی (PHP خالص، بدون افزونه).
+* افزودن تولید اسلات‌های آزاد ۳۰ دقیقه‌ای با حذف اسلات‌های رزروشده.
+* حذف روز جمعه و تعطیلات رسمی ایرانی از اسلات‌ها.
+* افزودن قالب‌بندی تاریخ جلالی با اعداد فارسی.
+* یک‌دست‌سازی شماره‌گذاری روزهای هفته با PHP w (جمعه = ۵).
+
 = 0.2.0 =
 * پیاده‌سازی کامل کلاس OnTime_Database با سه جدول سفارشی (services، appointments، settings).
 * افزودن متدهای create_tables()، seed_defaults()، get_table()، get_setting()، update_setting()، get_all_settings().
-* seeding تنظیمات پیش‌فرض (timezone، ساعات کاری، طول اسلات و ...).
 
 = 0.1.0 =
 * راه‌اندازی اولیه پروژه و ساختار پوشه‌ها.
@@ -55,5 +61,5 @@ OnTime یک افزونه وردپرسی سبک‌وزن و امن برای مد�
 
 == Upgrade Notice ==
 
-= 0.2.0 =
-افزودن لایه پایگاه‌داده و سه جدول سفارشی.
+= 0.3.0 =
+افزودن موتور تقویم جلالی و تولید اسلات‌های آزاد.
