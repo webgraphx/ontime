@@ -37,7 +37,7 @@ final class OnTime_Payment_Mock implements OnTime_Payment_Gateway {
 	 * @return string
 	 */
 	public function get_name() {
-		return __( 'تست (Mock)', 'ontime' );
+		return __( 'ØªØ³Øª (Mock)', 'ontime' );
 	}
 
 	/**
@@ -77,7 +77,7 @@ final class OnTime_Payment_Mock implements OnTime_Payment_Gateway {
 		return array(
 			'success'        => true,
 			'transaction_id' => 'MOCK-' . zeroise( $appointment_id, 6 ) . '-' . time(),
-			'message'        => __( 'پرداخت آزمایشی موفق بود.', 'ontime' ),
+			'message'        => __( 'Ù¾Ø±Ø¯Ø§Ø®Øª Ø¢Ø²ÙØ§ÛØ´Û ÙÙÙÙ Ø¨ÙØ¯.', 'ontime' ),
 		);
 	}
 }

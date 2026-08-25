@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       OnTime
  * Plugin URI:        https://ontime.example.com
- * Description:        سیستم نوبت‌دهی و رزرو آنلاین سبک‌وزن و امن با پشتیبانی کامل از تقویم جلالی، مناسب بازار ایرانی (ژاکت و راستچین).
+ * Description:        Ø³ÛØ³ØªÙ ÙÙØ¨ØªâØ¯ÙÛ Ù Ø±Ø²Ø±Ù Ø¢ÙÙØ§ÛÙ Ø³Ø¨Ú©âÙØ²Ù Ù Ø§ÙÙ Ø¨Ø§ Ù¾Ø´ØªÛØ¨Ø§ÙÛ Ú©Ø§ÙÙ Ø§Ø² ØªÙÙÛÙ Ø¬ÙØ§ÙÛØ ÙÙØ§Ø³Ø¨ Ø¨Ø§Ø²Ø§Ø± Ø§ÛØ±Ø§ÙÛ (ÚØ§Ú©Øª Ù Ø±Ø§Ø³ØªÚÛÙ).
  * Version:           1.0.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
@@ -29,13 +29,13 @@ define( 'ONTIME_BASENAME', plugin_basename( __FILE__ ) );
  * Autoloader for OnTime_ prefixed classes.
  *
  * Conventions:
- *   OnTime_Database           → includes/class-database.php
- *   OnTime_Calendar_Engine    → includes/class-calendar-engine.php
- *   OnTime_Admin_Settings     → includes/admin/class-settings.php
- *   OnTime_Admin_List_Table   → includes/admin/class-list-table.php
- *   OnTime_Frontend_Booking_Form → includes/frontend/class-booking-form.php
- *   OnTime_Payment_Handler    → includes/payment/class-handler.php
- *   OnTime_Payment_Mock       → includes/payment/class-mock.php
+ *   OnTime_Database           â includes/class-database.php
+ *   OnTime_Calendar_Engine    â includes/class-calendar-engine.php
+ *   OnTime_Admin_Settings     â includes/admin/class-settings.php
+ *   OnTime_Admin_List_Table   â includes/admin/class-list-table.php
+ *   OnTime_Frontend_Booking_Form â includes/frontend/class-booking-form.php
+ *   OnTime_Payment_Handler    â includes/payment/class-handler.php
+ *   OnTime_Payment_Mock       â includes/payment/class-mock.php
  *
  * The first segment after "OnTime_" is treated as a subdirectory only when
  * it matches a known directory (admin, frontend, payment). Otherwise the
