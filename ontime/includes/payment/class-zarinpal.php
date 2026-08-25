@@ -5,6 +5,9 @@
  * Communicates with the Zarinpal v4 REST API to request payments and
  * verify callbacks. Uses `wp_remote_post` for all HTTP communication.
  *
+ * Supports a sandbox mode for testing without hitting the live API.
+ * Enable it in Settings → OnTime → Payment → Sandbox Mode.
+ *
  * @package OnTime
  * @since   1.0.0
  */
@@ -20,61 +23,68 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 
-	/** @since 1.0.0 @var string API request endpoint. */
-	const API_REQUEST = 'https://api.zarinpal.com/pg/v4/payment-request.json';
+	/** @since 1.0.0 @var string API request endpoint (live). */
+	const API_REQUEST_LIVE = 'https://api.zarinpal.com/pg/v4/payment-request.json';
 
-	/** @since 1.0.0 @var string API verify endpoint. */
-	const API_VERIFY  = 'https://api.zarinpal.com/pg/v4/payment-verify.json';
+	/** @since 1.0.0 @var string API verify endpoint (live). */
+	const API_VERIFY_LIVE  = 'https://api.zarinpal.com/pg/v4/payment-verify.json';
 
-	/** @since 1.0.0 @var string StartPay base URL. */
-	const START_PAY   = 'https://www.zarinpal.com/pg/StartPay/';
+	/** @since 1.0.0 @var string API request endpoint (sandbox). */
+	const API_REQUEST_SANDBOX = 'https://sandbox.zarinpal.com/pg/v4/payment-request.json';
+
+	/** @since 1.0.0 @var string API verify endpoint (sandbox). */
+	const API_VERIFY_SANDBOX  = 'https://sandbox.zarinpal.com/pg/v4/payment-verify.json';
+
+	/** @since 1.0.0 @var string StartPay base URL (live). */
+	const START_PAY_LIVE    = 'https://www.zarinpal.com/pg/StartPay/';
+
+	/** @since 1.0.0 @var string StartPay base URL (sandbox). */
+	const START_PAY_SANDBOX = 'https://sandbox.zarinpal.com/pg/StartPay/';
 
 	/** @since 1.0.0 @var int Success codes from Zarinpal verify. */
 	const CODE_OK     = 100;
 	const CODE_ALREADY = 101;
 
-	/**
-	 * Get the gateway slug.
-	 *
-	 * @since 1.0.0
-	 * @return string
-	 */
 	public function get_slug() {
 		return 'zarinpal';
 	}
 
-	/**
-	 * Get the gateway display name.
-	 *
-	 * @since 1.0.0
-	 * @return string
-	 */
 	public function get_name() {
-		return __( 'Ø²Ø±ÛÙâÙ¾Ø§Ù', 'ontime' );
+		return __( 'زرین‌پال', 'ontime' );
 	}
 
-	/**
-	 * Get the merchant code from settings.
-	 *
-	 * @since 1.0.0
-	 * @return string
-	 */
+	private function is_sandbox() {
+		$opts = get_option( 'ontime_settings', array() );
+		if ( is_array( $opts ) && isset( $opts['zarinpal_sandbox'] ) ) {
+			return (bool) $opts['zarinpal_sandbox'];
+		}
+		return (bool) OnTime_Database::instance()->get_setting( 'zarinpal_sandbox', 0 );
+	}
+
+	private function get_api_request_url() {
+		return $this->is_sandbox() ? self::API_REQUEST_SANDBOX : self::API_REQUEST_LIVE;
+	}
+
+	private function get_api_verify_url() {
+		return $this->is_sandbox() ? self::API_VERIFY_SANDBOX : self::API_VERIFY_LIVE;
+	}
+
+	private function get_start_pay_url() {
+		return $this->is_sandbox() ? self::START_PAY_SANDBOX : self::START_PAY_LIVE;
+	}
+
 	private function get_merchant_id() {
 		$opts = get_option( 'ontime_settings', array() );
 		if ( is_array( $opts ) && ! empty( $opts['merchant_code'] ) ) {
 			return sanitize_text_field( $opts['merchant_code'] );
 		}
-		return (string) OnTime_Database::instance()->get_setting( 'merchant_code', '' );
+		$merchant = (string) OnTime_Database::instance()->get_setting( 'merchant_code', '' );
+		if ( '' === $merchant && $this->is_sandbox() ) {
+			return '00000000-0000-0000-0000-000000000000';
+		}
+		return $merchant;
 	}
 
-	/**
-	 * Build the callback URL for this gateway.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $appointment_id Appointment ID.
-	 * @return string
-	 */
 	private function get_callback_url( $appointment_id ) {
 		return add_query_arg(
 			array(
@@ -85,24 +95,15 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 		);
 	}
 
-	/**
-	 * Request a Zarinpal payment.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int   $appointment_id Appointment ID.
-	 * @param float $amount         Amount in Toman.
-	 * @return string|WP_Error Redirect URL on success, WP_Error on failure.
-	 */
 	public function request( $appointment_id, $amount ) {
 		$merchant_id = $this->get_merchant_id();
 		if ( '' === $merchant_id ) {
-			return new WP_Error( 'ontime_zarinpal_no_merchant', __( 'Ú©Ø¯ Ù¾Ø°ÛØ±ÙØ¯Ù Ø²Ø±ÛÙâÙ¾Ø§Ù ØªÙØ¸ÛÙ ÙØ´Ø¯Ù Ø§Ø³Øª.', 'ontime' ) );
+			return new WP_Error( 'ontime_zarinpal_no_merchant', __( 'کد پذیرنده زرین‌پال تنظیم نشده است.', 'ontime' ) );
 		}
 
-		$amount = (int) $amount;
+		$amount = absint( $amount );
 		if ( $amount < 1000 ) {
-			return new WP_Error( 'ontime_zarinpal_low_amount', __( 'ÙØ¨ÙØº Ù¾Ø±Ø¯Ø§Ø®Øª Ú©ÙØªØ± Ø§Ø² Ø­Ø¯Ø§ÙÙ ÙØ¬Ø§Ø² Ø§Ø³Øª.', 'ontime' ) );
+			return new WP_Error( 'ontime_zarinpal_low_amount', __( 'مبلغ پرداخت کمتر از حداقل مجاز است.', 'ontime' ) );
 		}
 
 		$body = array(
@@ -110,8 +111,7 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 			'amount'       => $amount,
 			'callback_url' => $this->get_callback_url( $appointment_id ),
 			'description'  => sprintf(
-				/* translators: %d: Appointment ID */
-				__( 'Ø±Ø²Ø±Ù ÙÙØ¨Øª Ø´ÙØ§Ø±Ù %d â OnTime', 'ontime' ),
+				__( 'رزرو نوبت شماره %d — OnTime', 'ontime' ),
 				$appointment_id
 			),
 			'metadata'     => array(
@@ -119,48 +119,36 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 			),
 		);
 
-		$response = wp_remote_post( self::API_REQUEST, array(
+		$response = wp_remote_post( $this->get_api_request_url(), array(
 			'body'    => wp_json_encode( $body ),
 			'headers' => array( 'Content-Type' => 'application/json' ),
 			'timeout' => 30,
 		) );
 
 		if ( is_wp_error( $response ) ) {
-			return new WP_Error( 'ontime_zarinpal_http', __( 'Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø¯Ø±Ú¯Ø§Ù Ø²Ø±ÛÙâÙ¾Ø§Ù ÙØ§ÙÙÙÙ Ø¨ÙØ¯.', 'ontime' ), $response->get_error_message() );
+			return new WP_Error( 'ontime_zarinpal_http', __( 'ارتباط با درگاه زرین‌پال ناموفق بود.', 'ontime' ), $response->get_error_message() );
 		}
 
 		$code    = wp_remote_retrieve_response_code( $response );
 		$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		if ( 200 !== (int) $code || empty( $decoded ) ) {
-			return new WP_Error( 'ontime_zarinpal_api', __( 'Ù¾Ø§Ø³Ø® ÙØ§ÙØ¹ØªØ¨Ø± Ø§Ø² Ø¯Ø±Ú¯Ø§Ù Ø²Ø±ÛÙâÙ¾Ø§Ù.', 'ontime' ) );
+			return new WP_Error( 'ontime_zarinpal_api', __( 'پاسخ نامعتبر از درگاه زرین‌پال.', 'ontime' ) );
 		}
 
-		// v4 response shape: { data: { authority, ... }, errors: {...} }.
 		if ( ! empty( $decoded['errors'] ) ) {
-			$error_msg = isset( $decoded['errors']['message'] ) ? $decoded['errors']['message'] : __( 'Ø®Ø·Ø§Û Ø¯Ø±Ú¯Ø§Ù Ø²Ø±ÛÙâÙ¾Ø§Ù.', 'ontime' );
+			$error_msg = isset( $decoded['errors']['message'] ) ? $decoded['errors']['message'] : __( 'خطای درگاه زرین‌پال.', 'ontime' );
 			return new WP_Error( 'ontime_zarinpal_error', $error_msg );
 		}
 
 		if ( empty( $decoded['data']['authority'] ) ) {
-			return new WP_Error( 'ontime_zarinpal_no_authority', __( 'Ú©Ø¯Authority Ø§Ø² Ø¯Ø±Ú¯Ø§Ù Ø¯Ø±ÛØ§ÙØª ÙØ´Ø¯.', 'ontime' ) );
+			return new WP_Error( 'ontime_zarinpal_no_authority', __( 'کد Authority از درگاه دریافت نشد.', 'ontime' ) );
 		}
 
 		$authority = sanitize_text_field( $decoded['data']['authority'] );
-		return self::START_PAY . $authority;
+		return $this->get_start_pay_url() . $authority;
 	}
 
-	/**
-	 * Verify a Zarinpal payment callback.
-	 *
-	 * Reads the `Authority` and `Status` query parameters that Zarinpal
-	 * sends back, then calls the verify API endpoint.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $appointment_id Appointment ID.
-	 * @return array Verification result.
-	 */
 	public function verify( $appointment_id ) {
 		$authority = isset( $_GET['Authority'] ) ? sanitize_text_field( wp_unslash( $_GET['Authority'] ) ) : '';
 		$status     = isset( $_GET['Status'] ) ? sanitize_text_field( wp_unslash( $_GET['Status'] ) ) : '';
@@ -169,11 +157,10 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 			return array(
 				'success'        => false,
 				'transaction_id' => '',
-				'message'        => __( 'Ù¾Ø±Ø¯Ø§Ø®Øª ØªÙØ³Ø· Ú©Ø§Ø±Ø¨Ø± ÙØºÙ Ø´Ø¯ ÛØ§ ÙØ§ÙÙÙÙ Ø¨ÙØ¯.', 'ontime' ),
+				'message'        => __( 'پرداخت توسط کاربر لغو شد یا ناموفق بود.', 'ontime' ),
 			);
 		}
 
-		// Fetch the appointment amount for verification.
 		global $wpdb;
 		$table    = OnTime_Database::instance()->get_table( 'appointments' );
 		$apt      = $wpdb->get_row(
@@ -189,19 +176,40 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 			return array(
 				'success'        => false,
 				'transaction_id' => '',
-				'message'        => __( 'ÙÙØ¨Øª ÛØ§ÙØª ÙØ´Ø¯.', 'ontime' ),
+				'message'        => __( 'نوبت یافت نشد.', 'ontime' ),
 			);
 		}
 
-		$amount = (int) $apt['price'];
+		$raw_price = $apt['price'];
+
+		if ( ! is_numeric( $raw_price ) ) {
+			$persian_map = array(
+				'۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+				'۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+				'٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+				'٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+			);
+			$raw_price = strtr( (string) $raw_price, $persian_map );
+		}
+
+		$amount = absint( $raw_price );
+
+		if ( $amount < 1000 ) {
+			return array(
+				'success'        => false,
+				'transaction_id' => '',
+				'message'        => __( 'مبلغ پرداخت نامعتبر است.', 'ontime' ),
+			);
+		}
+
 		$merchant_id = $this->get_merchant_id();
 		$body = array(
 			'merchant_id' => $merchant_id,
-			'amount'       => $amount,
-			'authority'   == $authority,
+			'amount'      => $amount,
+			'authority'   => $authority,
 		);
 
-		$response = wp_remote_post( self::API_VERIFY, array(
+		$response = wp_remote_post( $this->get_api_verify_url(), array(
 			'body'    => wp_json_encode( $body ),
 			'headers' => array( 'Content-Type' => 'application/json' ),
 			'timeout' => 30,
@@ -211,14 +219,14 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 			return array(
 				'success'        => false,
 				'transaction_id' => '',
-				'message'        => __( 'Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø¯Ø±Ú¯Ø§Ù Ø¨Ø±Ø§Û ØªØ£ÛÛØ¯ Ù¾Ø±Ø¯Ø§Ø®Øª ÙØ§ÙÙÙÙ Ø¨ÙØ¯.', 'ontime' ),
+				'message'        => __( 'ارتباط با درگاه برای تأیید پرداخت ناموفق بود.', 'ontime' ),
 			);
 		}
 
 		$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		if ( empty( $decoded ) || ! empty( $decoded['errors'] ) ) {
-			$error_msg = isset( $decoded['errors']['message'] ) ? $decoded['errors']['message'] : __( 'ØªØ£ÛÛØ¯ Ù¾Ø±Ø¯Ø§Ø®Øª ÙØ§ÙÙÙÙ Ø¨ÙØ¯.', 'ontime' );
+			$error_msg = isset( $decoded['errors']['message'] ) ? $decoded['errors']['message'] : __( 'تأیید پرداخت ناموفق بود.', 'ontime' );
 			return array(
 				'success'        => false,
 				'transaction_id' => '',
@@ -233,14 +241,14 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 			return array(
 				'success'        => true,
 				'transaction_id' => $ref_id,
-				'message'        => __( 'Ù¾Ø±Ø¯Ø§Ø®Øª Ø¨Ø§ ÙÙÙÙÛØª ØªØ£ÛÛØ¯ Ø´Ø¯.', 'ontime' ),
+				'message'        => __( 'پرداخت با موفقیت تأیید شد.', 'ontime' ),
 			);
 		}
 
 		return array(
 			'success'        => false,
 			'transaction_id' => $ref_id,
-			'message'        => __( 'ØªØ£ÛÛØ¯ Ù¾Ø±Ø¯Ø§Ø®Øª ÙØ§ÙÙÙÙ Ø¨ÙØ¯.', 'ontime' ),
+			'message'        => __( 'تأیید پرداخت ناموفق بود.', 'ontime' ),
 		);
 	}
 }

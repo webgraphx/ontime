@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+	OnTime PHPUnit configuration.
+	@since 1.0.0
+-->
+<phpunit
+	bootstrap="tests/bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	>
+	<testsuites>
+		<testsuite name="OnTime Plugin Tests">
+			<directory prefix="test-">tests/</directory>
+		</testsuite>
+	</testsuites>
+	<php>
+		<env name="WP_TESTS_DIR" value=""/>
+		<env name="WP_PHPUNIT_TABLE_PREFIX" value="wptests_"/>
+	</php>
+</phpunit>
