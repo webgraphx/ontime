@@ -1,0 +1,14 @@
+# Development files excluded from the distributable package.
+node_modules/
+.git/
+.gitignore
+*.zip
+.DS_Store
+Thumbs.db
+composer.json
+composer.lock
+package.json
+package-lock.json
+tests/
+phpcs.xml.dist
+.phpcs.xml
