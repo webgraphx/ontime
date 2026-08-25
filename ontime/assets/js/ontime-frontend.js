@@ -1,6 +1,8 @@
 /**
- * OnTime — Frontend booking form JS (Stage 4).
+ * OnTime â Frontend booking form JS.
  * Pure Vanilla JS, no jQuery. Step navigation + Jalali calendar grid + AJAX.
+ *
+ * @since 0.5.0
  */
 
 ( function () {
@@ -33,7 +35,7 @@
 	function t( key ) { return ( DATA.i18n && DATA.i18n[ key ] ) ? DATA.i18n[ key ] : key; }
 
 	// Persian month names (mirror of PHP).
-	var MONTHS = [ 'فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند' ];
+	var MONTHS = [ 'ÙØ±ÙØ±Ø¯ÛÙ','Ø§Ø±Ø¯ÛØ¨ÙØ´Øª','Ø®Ø±Ø¯Ø§Ø¯','ØªÛØ±','ÙØ±Ø¯Ø§Ø¯','Ø´ÙØ±ÛÙØ±','ÙÙØ±','Ø¢Ø¨Ø§Ù','Ø¢Ø°Ø±','Ø¯Û','Ø¨ÙÙÙ','Ø§Ø³ÙÙØ¯' ];
 
 	function init() {
 		widget = document.querySelector( '.ontime-widget' );
@@ -42,7 +44,7 @@
 
 		bindNav();
 		goStep( 1 );
-		if ( state.serviceId > 0 ) { loadServices(); } else { loadServices(); }
+		loadServices();
 	}
 
 	function bindNav() {
@@ -103,7 +105,7 @@
 				card.className = 'ontime-service-card';
 				card.setAttribute( 'data-id', s.id );
 				card.innerHTML = '<div class="ontime-svc-name">' + esc( s.name ) + '</div>'
-					+ '<div class="ontime-svc-meta">' + esc( s.duration + ' دقیقه' ) + ' • ' + esc( s.price ) + ' تومان</div>';
+					+ '<div class="ontime-svc-meta">' + esc( s.duration + ' Ø¯ÙÛÙÙ' ) + ' â¢ ' + esc( s.price ) + ' ØªÙÙØ§Ù</div>';
 				card.addEventListener( 'click', function () {
 					$all( '.ontime-service-card' ).forEach( function ( c ) { c.classList.remove( 'selected' ); } );
 					card.classList.add( 'selected' );
@@ -223,9 +225,10 @@
 	function renderSummary() {
 		var s = $( '#ontime-summary' );
 		if ( ! s ) { return; }
+		var dateLabel = state.jDay ? toPersian( state.jDay ) + ' ' + MONTHS[ state.jMonth - 1 ] + ' ' + toPersian( state.jYear ) : '';
 		s.innerHTML = '<strong>' + esc( state.serviceName ) + '</strong><br>'
-			+ esc( t( 'loading' ).replace( '...', '' ) + ': ' ) + esc( state.slotLabel ) + '<br>'
-			+ esc( 'قیمت: ' ) + esc( state.servicePrice ) + ' تومان';
+			+ esc( dateLabel + ' â ' + state.slotLabel ) + '<br>'
+			+ esc( 'ÙÛÙØª: ' ) + esc( state.servicePrice ) + ' ØªÙÙØ§Ù';
 	}
 
 	function submitBooking( cb ) {
@@ -301,7 +304,16 @@
 			if ( res && res.success ) {
 				out.classList.add( 'ontime-ok' );
 				out.textContent = ( res.data && res.data.message ) || t( 'success' );
-				if ( next ) { next.style.display = 'none'; }
+
+				// If a payment redirect URL was returned, redirect the browser.
+				if ( res.data && res.data.redirect_url ) {
+					if ( next ) { next.style.display = 'none'; }
+					setTimeout( function () {
+						window.location.href = res.data.redirect_url;
+					}, 1500 );
+				} else {
+					if ( next ) { next.style.display = 'none'; }
+				}
 			} else {
 				out.classList.add( 'ontime-err' );
 				out.textContent = ( res && res.data && res.data.message ) || t( 'error' );
@@ -328,7 +340,7 @@
 		var gy = gY - 1600, gm = gM - 1, gd = gD - 1;
 		var gNo = 365 * gy + Math.floor( ( gy + 3 ) / 4 ) - Math.floor( ( gy + 99 ) / 100 ) + Math.floor( ( gy + 399 ) / 400 );
 		for ( var i = 0; i < gm; i++ ) { gNo += gDays[ i ]; }
-		if ( gm > 1 && ( ( gY % 4 === 0 && gY % 100 !== 0 ) || ( gY % 400 === 0 ) ) ) { gNo++; }
+		if ( gm > 1 && ( ( gY % 4 === 0 && gY % 100 !== 0) || ( gY % 400 === 0) ) ) { gNo++; }
 		gNo += gd;
 		var jNo = gNo - 79;
 		var jNp = Math.floor( jNo / 12053 ); jNo %= 12053;
@@ -346,7 +358,7 @@
 
 	function isJLeap( jY ) {
 		var breaks = [ -61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1221, 1354 ];
-		var jp = jY - 979, jn = -1, jump = 0;
+		var jp = jY - 979, jn = -1, jump = 0, jm;
 		for ( var i = 0; i < breaks.length; i++ ) {
 			jm = breaks[ i ];
 			jump = jm - jn;
@@ -386,20 +398,18 @@
 	}
 
 	function toPersian( n ) {
-		var map = [ '۰','۱','۲','۳','۴','۵','۶','۷','۸','۹' ];
+		var map = [ 'Û°','Û±','Û²','Û²','Û³','Û´','Ûµ','Û¶','Û·','Û¸','Û¹' ];
 		return String( n ).replace( /[0-9]/g, function ( d ) { return map[ d ]; } );
 	}
 
 	function esc( s ) {
 		var div = document.createElement( 'div' );
-		div.textContent = s == null ? '' : String( s );
-		return div.innerHTML;
-	}
+		div.textContent = s == null ? '' : String(È
+NÂB\]\][\SÂ_BKËÈÛÝZY
+ØÝ[Y[XYTÝ]HOOH	ÛØY[ÉÈ
+HÂBYØÝ[Y[Y][\Ý[\	ÑÓPÛÛ[ØYY	Ë[]
+NÂ_H[ÙHÂBZ[]
 
-	// Boot.
-	if ( document.readyState === 'loading' ) {
-		document.addEventListener( 'DOMContentLoaded', init );
-	} else {
-		init();
-	}
-} )();
+NÂ_BH
+J
+NÂ
