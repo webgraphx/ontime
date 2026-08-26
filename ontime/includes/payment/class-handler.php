@@ -23,70 +23,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 interface OnTime_Payment_Gateway {
 
-	/**
-	 * Get the gateway slug (machine name).
-	 *
-	 * @since 1.0.0
-	 * @return string
-	 */
 	public function get_slug();
-
-	/**
-	 * Get the gateway display name.
-	 *
-	 * @since 1.0.0
-	 * @return string
-	 */
 	public function get_name();
-
-	/**
-	 * Request a payment — returns a redirect URL or WP_Error.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int   $appointment_id Appointment ID.
-	 * @param float $amount        Amount in Toman.
-	 * @return string|WP_Error Redirect URL on success, WP_Error on failure.
-	 */
 	public function request( $appointment_id, $amount );
-
-	/**
-	 * Verify a payment callback.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $appointment_id Appointment ID.
-	 * @return array {
-	 *     @type bool   $success        Whether verification succeeded.
-	 *     @type string $transaction_id Gateway transaction / reference ID.
-	 *     @type string $message        Human-readable result message.
-	 * }
-	 */
 	public function verify( $appointment_id );
 }
 
-/**
- * Payment handler (Singleton).
- *
- * Registers available gateways, routes payment requests to the active
- * gateway, and processes payment callbacks securely.
- *
- * @since 0.1.0
- */
 final class OnTime_Payment_Handler {
 
-	/** @since 0.1.0 @var OnTime_Payment_Handler|null */
 	private static $instance = null;
-
-	/** @since 1.0.0 @var array<string,OnTime_Payment_Gateway> Registered gateways. */
 	private $gateways = array();
 
-	/**
-	 * Singleton accessor.
-	 *
-	 * @since 0.1.0
-	 * @return OnTime_Payment_Handler
-	 */
 	public static function instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -98,17 +45,15 @@ final class OnTime_Payment_Handler {
 
 	private function __construct() {}
 
-	/**
-	 * Register built-in payment gateways.
-	 *
-	 * @since 1.0.0
-	 * @return void
-	 */
 	private function register_gateways() {
 		$classes = array(
-			'OnTime_Payment_Mock',
 			'OnTime_Payment_Zarinpal',
 		);
+
+		// Only register the mock gateway in debug/test mode.
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			$classes[] = 'OnTime_Payment_Mock';
+		}
 		foreach ( $classes as $class ) {
 			if ( class_exists( $class ) ) {
 				$gw = new $class();
@@ -119,35 +64,16 @@ final class OnTime_Payment_Handler {
 		}
 	}
 
-	/**
-	 * Hook the payment callback handler.
-	 *
-	 * @since 1.0.0
-	 * @return void
-	 */
 	private function register_hooks() {
 		add_action( 'template_redirect', array( $this, 'handle_callback' ) );
 	}
 
-	/**
-	 * Get all registered gateways.
-	 *
-	 * @since 1.0.0
-	 * @return array<string,OnTime_Payment_Gateway>
-	 */
 	public function get_gateways() {
 		return $this->gateways;
 	}
 
-	/**
-	 * Get the active gateway based on stored settings.
-	 *
-	 * @since 1.0.0
-	 * @return OnTime_Payment_Gateway|null
-	 */
 	public function get_active_gateway() {
 		$slug = OnTime_Database::instance()->get_setting( 'payment_gateway', 'mock' );
-		// Also check the WordPress options override.
 		$opts = get_option( 'ontime_settings', array() );
 		if ( is_array( $opts ) && ! empty( $opts['payment_gateway'] ) ) {
 			$slug = $opts['payment_gateway'];
@@ -156,15 +82,6 @@ final class OnTime_Payment_Handler {
 		return isset( $this->gateways[ $slug ] ) ? $this->gateways[ $slug ] : null;
 	}
 
-	/**
-	 * Process a payment request for an appointment.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int   $appointment_id Appointment ID.
-	 * @param float $amount         Amount in Toman.
-	 * @return string|WP_Error Redirect URL on success, WP_Error on failure.
-	 */
 	public function process_payment( $appointment_id, $amount ) {
 		$gateway = $this->get_active_gateway();
 		if ( null === $gateway ) {
@@ -173,22 +90,11 @@ final class OnTime_Payment_Handler {
 		return $gateway->request( $appointment_id, $amount );
 	}
 
-	/**
-	 * Handle payment gateway callbacks.
-	 *
-	 * Detects the `ontime_callback` query var on the front-end and delegates
-	 * verification to the active gateway. Updates the appointment status
-	 * and redirects the user to an appropriate page.
-	 *
-	 * @since 1.0.0
-	 * @return void
-	 */
 	public function handle_callback() {
 		if ( is_admin() ) {
 			return;
 		}
 
-		// Detect callback by query var.
 		$callback = isset( $_GET['ontime_callback'] ) ? sanitize_key( wp_unslash( $_GET['ontime_callback'] ) ) : '';
 		if ( '' === $callback ) {
 			return;
@@ -208,14 +114,6 @@ final class OnTime_Payment_Handler {
 
 		$this->update_appointment_after_payment( $appointment_id, $result );
 
-		/**
-		 * Fires after a payment callback has been processed.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param int   $appointment_id Appointment ID.
-		 * @param array $result         Verification result array.
-		 */
 		do_action( 'ontime_payment_callback_processed', $appointment_id, $result );
 
 		if ( ! empty( $result['success'] ) ) {
@@ -228,15 +126,6 @@ final class OnTime_Payment_Handler {
 		exit;
 	}
 
-	/**
-	 * Update the appointment record after a payment callback.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int   $appointment_id Appointment ID.
-	 * @param array $result        Verification result.
-	 * @return void
-	 */
 	private function update_appointment_after_payment( $appointment_id, $result ) {
 		global $wpdb;
 		$table = OnTime_Database::instance()->get_table( 'appointments' );
@@ -267,27 +156,7 @@ final class OnTime_Payment_Handler {
 		}
 	}
 
-	/**
-	 * Build a front-end redirect URL for payment results.
-	 *
-	 * Uses the site URL with a query string that the theme/plugin can detect.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $status         'success' or 'failed'.
-	 * @param int    $appointment_id Appointment ID.
-	 * @return string
-	 */
 	private function get_redirect_url( $status, $appointment_id ) {
-		/**
-		 * Filter the payment result redirect URL.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param string $url            Default redirect URL.
-		 * @param string $status         'success' or 'failed'.
-		 * @param int    $appointment_id Appointment ID.
-		 */
 		return apply_filters(
 			'ontime_payment_redirect_url',
 			add_query_arg(
