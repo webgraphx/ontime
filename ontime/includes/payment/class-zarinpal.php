@@ -3,10 +3,11 @@
  * Zarinpal payment gateway integration.
  *
  * Communicates with the Zarinpal v4 REST API to request payments and
- * verify callbacks. Uses `wp_remote_post` for all HTTP communication.
+ * verify callbacks. Uses wp_remote_post for all HTTP communication.
  *
- * Supports a sandbox mode for testing without hitting the live API.
- * Enable it in Settings → OnTime → Payment → Sandbox Mode.
+ * Supports sandbox mode for testing without a real merchant account.
+ * When sandbox is enabled, requests go to sandbox.zarinpal.com and a
+ * default test merchant ID is used if none is configured.
  *
  * @package OnTime
  * @since   1.0.0
@@ -16,34 +17,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Zarinpal payment gateway.
- *
- * @since 1.0.0
- */
 final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 
-	/** @since 1.0.0 @var string API request endpoint (live). */
-	const API_REQUEST_LIVE = 'https://api.zarinpal.com/pg/v4/payment-request.json';
-
-	/** @since 1.0.0 @var string API verify endpoint (live). */
-	const API_VERIFY_LIVE  = 'https://api.zarinpal.com/pg/v4/payment-verify.json';
-
-	/** @since 1.0.0 @var string API request endpoint (sandbox). */
-	const API_REQUEST_SANDBOX = 'https://sandbox.zarinpal.com/pg/v4/payment-request.json';
-
-	/** @since 1.0.0 @var string API verify endpoint (sandbox). */
-	const API_VERIFY_SANDBOX  = 'https://sandbox.zarinpal.com/pg/v4/payment-verify.json';
-
-	/** @since 1.0.0 @var string StartPay base URL (live). */
-	const START_PAY_LIVE    = 'https://www.zarinpal.com/pg/StartPay/';
-
-	/** @since 1.0.0 @var string StartPay base URL (sandbox). */
-	const START_PAY_SANDBOX = 'https://sandbox.zarinpal.com/pg/StartPay/';
-
-	/** @since 1.0.0 @var int Success codes from Zarinpal verify. */
+	const API_REQUEST = 'https://api.zarinpal.com/pg/v4/payment-request.json';
+	const API_VERIFY  = 'https://api.zarinpal.com/pg/v4/payment-verify.json';
+	const START_PAY   = 'https://www.zarinpal.com/pg/StartPay/';
+	const SANDBOX_API_REQUEST = 'https://sandbox.zarinpal.com/pg/v4/payment-request.json';
+	const SANDBOX_API_VERIFY  = 'https://sandbox.zarinpal.com/pg/v4/payment-verify.json';
+	const SANDBOX_START_PAY   = 'https://sandbox.zarinpal.com/pg/StartPay/';
+	const SANDBOX_MERCHANT    = '00000000-0000-0000-0000-000000000000';
 	const CODE_OK     = 100;
 	const CODE_ALREADY = 101;
+
+	private function is_sandbox() {
+		$opts = get_option( 'ontime_settings', array() );
+		if ( is_array( $opts ) && ! empty( $opts['zarinpal_sandbox'] ) ) {
+			return (bool) $opts['zarinpal_sandbox'];
+		}
+		return (bool) OnTime_Database::instance()->get_setting( 'zarinpal_sandbox', 0 );
+	}
 
 	public function get_slug() {
 		return 'zarinpal';
@@ -53,26 +45,6 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 		return __( 'زرین‌پال', 'ontime' );
 	}
 
-	private function is_sandbox() {
-		$opts = get_option( 'ontime_settings', array() );
-		if ( is_array( $opts ) && isset( $opts['zarinpal_sandbox'] ) ) {
-			return (bool) $opts['zarinpal_sandbox'];
-		}
-		return (bool) OnTime_Database::instance()->get_setting( 'zarinpal_sandbox', 0 );
-	}
-
-	private function get_api_request_url() {
-		return $this->is_sandbox() ? self::API_REQUEST_SANDBOX : self::API_REQUEST_LIVE;
-	}
-
-	private function get_api_verify_url() {
-		return $this->is_sandbox() ? self::API_VERIFY_SANDBOX : self::API_VERIFY_LIVE;
-	}
-
-	private function get_start_pay_url() {
-		return $this->is_sandbox() ? self::START_PAY_SANDBOX : self::START_PAY_LIVE;
-	}
-
 	private function get_merchant_id() {
 		$opts = get_option( 'ontime_settings', array() );
 		if ( is_array( $opts ) && ! empty( $opts['merchant_code'] ) ) {
@@ -80,7 +52,7 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 		}
 		$merchant = (string) OnTime_Database::instance()->get_setting( 'merchant_code', '' );
 		if ( '' === $merchant && $this->is_sandbox() ) {
-			return '00000000-0000-0000-0000-000000000000';
+			return self::SANDBOX_MERCHANT;
 		}
 		return $merchant;
 	}
@@ -95,13 +67,28 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 		);
 	}
 
+	private function sanitize_amount( $amount ) {
+		if ( ! is_numeric( $amount ) ) {
+			$amount = strtr( (string) $amount, array(
+				'۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+				'۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+				'٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+				'٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+			) );
+			if ( ! is_numeric( $amount ) ) {
+				return 0;
+			}
+		}
+		return absint( $amount );
+	}
+
 	public function request( $appointment_id, $amount ) {
 		$merchant_id = $this->get_merchant_id();
 		if ( '' === $merchant_id ) {
 			return new WP_Error( 'ontime_zarinpal_no_merchant', __( 'کد پذیرنده زرین‌پال تنظیم نشده است.', 'ontime' ) );
 		}
 
-		$amount = absint( $amount );
+		$amount = $this->sanitize_amount( $amount );
 		if ( $amount < 1000 ) {
 			return new WP_Error( 'ontime_zarinpal_low_amount', __( 'مبلغ پرداخت کمتر از حداقل مجاز است.', 'ontime' ) );
 		}
@@ -110,16 +97,13 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 			'merchant_id'  => $merchant_id,
 			'amount'       => $amount,
 			'callback_url' => $this->get_callback_url( $appointment_id ),
-			'description'  => sprintf(
-				__( 'رزرو نوبت شماره %d — OnTime', 'ontime' ),
-				$appointment_id
-			),
-			'metadata'     => array(
-				'appointment_id' => (int) $appointment_id,
-			),
+			'description'  => sprintf( __( 'رزرو نوبت شماره %d — OnTime', 'ontime' ), $appointment_id ),
+			'metadata'     => array( 'appointment_id' => (int) $appointment_id ),
 		);
 
-		$response = wp_remote_post( $this->get_api_request_url(), array(
+		$endpoint = $this->is_sandbox() ? self::SANDBOX_API_REQUEST : self::API_REQUEST;
+
+		$response = wp_remote_post( $endpoint, array(
 			'body'    => wp_json_encode( $body ),
 			'headers' => array( 'Content-Type' => 'application/json' ),
 			'timeout' => 30,
@@ -146,7 +130,8 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 		}
 
 		$authority = sanitize_text_field( $decoded['data']['authority'] );
-		return $this->get_start_pay_url() . $authority;
+		$start_pay = $this->is_sandbox() ? self::SANDBOX_START_PAY : self::START_PAY;
+		return $start_pay . $authority;
 	}
 
 	public function verify( $appointment_id ) {
@@ -165,7 +150,6 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 		$table    = OnTime_Database::instance()->get_table( 'appointments' );
 		$apt      = $wpdb->get_row(
 			$wpdb->prepare(
-				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				"SELECT a.id, s.price FROM {$table} a JOIN " . OnTime_Database::instance()->get_table( 'services' ) . " s ON a.service_id = s.id WHERE a.id = %d",
 				$appointment_id
 			),
@@ -180,25 +164,12 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 			);
 		}
 
-		$raw_price = $apt['price'];
-
-		if ( ! is_numeric( $raw_price ) ) {
-			$persian_map = array(
-				'۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
-				'۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
-				'٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
-				'٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
-			);
-			$raw_price = strtr( (string) $raw_price, $persian_map );
-		}
-
-		$amount = absint( $raw_price );
-
+		$amount = $this->sanitize_amount( $apt['price'] );
 		if ( $amount < 1000 ) {
 			return array(
 				'success'        => false,
 				'transaction_id' => '',
-				'message'        => __( 'مبلغ پرداخت نامعتبر است.', 'ontime' ),
+				'message'        => __( 'مبلغ نوبت نامعتبر است.', 'ontime' ),
 			);
 		}
 
@@ -209,7 +180,9 @@ final class OnTime_Payment_Zarinpal implements OnTime_Payment_Gateway {
 			'authority'   => $authority,
 		);
 
-		$response = wp_remote_post( $this->get_api_verify_url(), array(
+		$endpoint = $this->is_sandbox() ? self::SANDBOX_API_VERIFY : self::API_VERIFY;
+
+		$response = wp_remote_post( $endpoint, array(
 			'body'    => wp_json_encode( $body ),
 			'headers' => array( 'Content-Type' => 'application/json' ),
 			'timeout' => 30,
